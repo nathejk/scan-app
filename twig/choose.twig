@@ -1,0 +1,12 @@
+{% extends "page.tpl" %}
+{% block container %}
+    <div class="starter-template">
+        <h1>Vælg funktion</h1>
+        <p class="lead">Du er registreret med flere funktioner på Nathejk, vælg din nuværende:</p>
+        <form action="" method="post">
+            {foreach from=$members item=m}
+            <button type="submit" name="memberId" value="{$m->id}" class="btn btn-default btn-lg btn-block btn-success">{$m->team->title|escape}</button>
+            {/foreach}
+        </form>
+    </div>
+{% endblock %}

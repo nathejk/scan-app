@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+    scan-app:
+        image: nathejk/scan-app
+        build: ../scan-app
+        volumes:
+            - "../scan-app:/var/www"

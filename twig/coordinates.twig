@@ -1,0 +1,32 @@
+{% extends "page.twig" %}
+
+{% block container %}
+<script type="text/javascript">
+ 
+  function getLocation(pos)
+  {
+    var latitde = pos.coords.latitude;
+    var longitude = pos.coords.longitude;
+    location.href = '?location=' + latitde + ':' + longitude;
+  }
+  function unknownLocation()
+  {
+        var coor = prompt('Indtast dit kortkoordinat:');
+        if (coor) {
+            location.href = '?location=' + coor;
+        } else {
+            alert('du mangler at opgive koordinat, din fangst er ikke registreret');
+        }
+  }
+if (navigator && navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(getLocation, unknownLocation);
+} else {
+  unknownLocation();
+}
+</script>
+
+    <div class="starter-template">
+<!-- button onclick="unknownLocation()">Tryk her</button -->
+<h1>Finder position</h1>
+<i class="icon-spinner icon-spin icon-5x"></i>
+{% endblock %}

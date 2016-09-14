@@ -1,0 +1,26 @@
+{% extends "page.twig" %}
+
+{% block container %}
+      <div class="starter-template">
+{% if members|length > 1 %}
+<form action="" method="post">
+    <div class="well" style="padding:10px 10px 5px">
+        <button type="submit" name="choose" class="btn btn-danger btn-xs pull-right">skift</button>
+        <p>Din nuværende funktion: <strong>{{ member.team.title }}</strong></p>
+    </div>
+</form>
+{% endif %}
+
+        <h1>{{ team.armNumber }}. {{ team.title }}</h1>
+        {% if member.isBandit %}
+            {% if team.catchCount == 1 %}
+                <p class="lead">BINGO, det er først gang at denne patrulje bliver fanget</p>
+            {% else %}
+                <p class="lead">Denne patrulje er nu blevet fanget {{ team.catchCount }} gange.</p>
+            {% endif %}
+        {% else %}
+            <p class="lead">Denne patrulje er blevet fanget {{ team.catchCount }} gange - i alt er de nu blevet scannet {{ team.contactCount }} gange</p>
+        {% endif %}
+        {% if team.noticeText %}<p class="lead" style="color:red">{{ team.noticeText }}</p>{% endif %}
+      </div>
+{% endblock %}

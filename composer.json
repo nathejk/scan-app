@@ -1,0 +1,18 @@
+{
+    "autoload" : {
+        "psr-4" : {
+            "Nathejk\\Scan\\" : "src"
+        }
+    },
+    "require": {
+        "silex/silex": "~1.3",
+        "doctrine/dbal": "~2.5",                                                                                      
+        "twig/twig": "~1.24",
+        "repejota/nats": "~0.8",
+
+        "michelf/php-markdown": "~1.5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "*"
+    }
+}
