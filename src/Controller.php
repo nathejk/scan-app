@@ -15,15 +15,16 @@ class Controller
 
     public function loginAction(Application $app, Request $request)
     {
-        return 'login';
+        return 'scan';
     }
 
     public function scanAction(Application $app, Request $request, $teamId, $checksum)
     {
-        if (!$user = $this->getLoggedInUser($app)) {
+        if (!$user = $this->getLoggedInUser($app, $request)) {
             return 'fail';
         }
-        if (is_string($user)) {
+        
+        if (is_string($user) || !$user instanceof \stdClass) {
             // $user this is not a user, but a template
             return $user;
         }
@@ -45,7 +46,10 @@ class Controller
         else if (empty($loc)) {
             return $app['twig']->render('coordinates.twig', $this->context);
         } else {
+            $app['repo']->saveScan($team, $user, $loc);
             $this->scan($team, $user, $loc);
+            // reload team to reflec scanning
+            $this->context['team'] = $app['repo']->findTeam($team->id);
             return $app['twig']->render('contact.twig', $this->context);
         }
     }
@@ -62,7 +66,7 @@ class Controller
             ->setPort(4222);
         $c = new \Nats\Connection($connectionOptions);
         $c->connect();
-        $c->publish("scan", json_encode([
+        $c->publish("geoEvents", json_encode([
             'type' => "caught",
             'location' => ['lat' => $lat, 'lon' => $lon],
             'patrol' => $team->armNumber,
@@ -74,7 +78,7 @@ class Controller
         $c->close();
     }
 
-    public function getLoggedInUser($app)
+    public function getLoggedInUser($app, $request)
     {
         $cookie = isset($_COOKIE['nh']) ? $_COOKIE['nh'] : ':';
         list($id, $checksum) = explode(':', $cookie);
@@ -99,7 +103,8 @@ class Controller
             }
         } else {
             if (isset($_POST['memberId'])) {
-                $member = $app['repo']->findMember($id);
+                $member = $app['repo']->findMember($_POST['memberId']);
+                var_dump($id, $member);
             }
             $this->context += [
                 'member' => $member,
@@ -108,8 +113,7 @@ class Controller
             $duration = count($members) > 1 ? 60*30 : 60*60*24*3; 
             setcookie('nh', $member->id . ':' . md5('kaal' . $member->id), time() + $duration, '/');
             if (isset($_POST['memberId'])) {
-                return $app->redirect('');
-                Pasta_Http::redirect('');
+                return $app->redirect($request->getUri());
             }
         }
         $this->context += ['member' => $member];

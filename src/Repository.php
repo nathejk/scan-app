@@ -16,17 +16,19 @@ class Repository
         $activeCountSql = $countSql . " AND pausedUts = 0 AND discontinuedUts = 0";
         $sql = "SELECT *, CONCAT(teamNumber, '-', ($countSql)) AS armNumber, ($activeCountSql) AS activeMemberCount FROM nathejk_team team WHERE team.id = :id AND team.deletedUts = 0";
         $row = $this->app['db']->executeQuery($sql, ['id' => $teamId])->fetchObject();
+        if (!$row) return null;
         $row->parentTeam = intval($row->parentTeamId) ? $this->findTeam($row->parentTeamId) : null;
         $row->catchCount = $this->findContactCount($teamId, true);
         $row->contactCount = $this->findContactCount($teamId);
         $row->noticeText = 'Skal fanges';
-        return $row ? $row : null;
+        return $row;
     }
 
     public function findMember($memberId)
     {
         $sql = "SELECT * FROM nathejk_member WHERE id = :id AND deletedUts = 0";
         $row = $this->app['db']->executeQuery($sql, ['id' => $memberId])->fetchObject();
+        if (!$row) return null;
         $row->team = $this->findTeam($row->teamId);
         $row->isBandit = in_array($row->team->typeName, ['klan', 'lok']); 
         return $row ? $row : null;
@@ -38,6 +40,8 @@ class Repository
         $stmt = $this->app['db']->executeQuery($sql, ['phone' => $phone]);
         $members = [];
         while ($member = $stmt->fetchObject()) {
+            $member->team = $this->findTeam($member->teamId);
+            $member->isBandit = in_array($member->team->typeName, ['klan', 'lok']); 
             $members[$member->id] = $member;
         }
         return $members;
@@ -53,7 +57,24 @@ class Repository
         return $row ? $row->contactCount : 0;
     }
 
+    public function findSubTeams($teamId)
+    {
+        $sql = "SELECT id FROM nathejk_team WHERE parentTeamId = :teamId";
+        $stmt = $this->app['db']->executeQuery($sql, ['teamId' => $teamId]);
+        $teams = [];
+        while ($team = $stmt->fetchObject()) {
+            $teams[] = $this->findTeam($team->id);
+        }
+        return $teams;
+    }
 
+    public function saveScan($team, $member, $loc)
+    {
+        $sql = "INSERT INTO nathejk_checkIn (teamId, memberId, location, createdUts, typeName, isCaught, outUts, deletedUts, remark) VALUES (?, ?, ?, UNIX_TIMESTAMP(NOW()), 'qr', ?, 0, 0, '')";
+        foreach ($this->findSubTeams($team->id) + [$team] as $t) {
+            $this->app['db']->executeQuery($sql, [$t->id, $member->id, $loc, (int)$member->isBandit]);
+        }
+    }
 
     public function getNoticeText()
     {
