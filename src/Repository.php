@@ -14,13 +14,27 @@ class Repository
     {
         $countSql = "SELECT COUNT(*) FROM nathejk_member WHERE teamId = team.id AND deletedUts = 0";
         $activeCountSql = $countSql . " AND pausedUts = 0 AND discontinuedUts = 0";
-        $sql = "SELECT *, CONCAT(teamNumber, '-', ($countSql)) AS armNumber, ($activeCountSql) AS activeMemberCount FROM nathejk_team team WHERE team.id = :id AND team.deletedUts = 0";
+        $sql = "SELECT *, CONCAT(teamNumber, '-', ($countSql)) AS armNumber, ($countSql) AS startCount, ($activeCountSql) AS activeMemberCount FROM nathejk_team team WHERE team.id = :id AND team.deletedUts = 0";
         $row = $this->app['db']->executeQuery($sql, ['id' => $teamId])->fetchObject();
         if (!$row) return null;
         $row->parentTeam = intval($row->parentTeamId) ? $this->findTeam($row->parentTeamId) : null;
         $row->catchCount = $this->findContactCount($teamId, true);
         $row->contactCount = $this->findContactCount($teamId);
-        $row->noticeText = 'Skal fanges';
+        $row->title = utf8_decode($row->title);
+
+        $activeCount = $row->activeMemberCount;
+        $armNumbers = array();
+        foreach ($this->findSubTeamsStat($row->id) as $stat) {
+            $activeCount += $stat->activeMemberCount;
+            $armNumbers[] = $stat->armNumber;
+        }
+ 
+        $row->noticeText = '';
+        if (count($armNumbers)) {
+            $row->noticeText = "Patruljen er slået sammen med " . implode(' og ', $armNumbers) . " - de skal være i alt $activeCount spejdere";
+        } else if ($row->activeMemberCount != $row->startCount) {
+            $row->noticeText = "Patruljen er reduceret til {$row->activeMemberCount} spejdere";
+        }
         return $row;
     }
 
@@ -67,11 +81,25 @@ class Repository
         }
         return $teams;
     }
+    public function findSubTeamsStat($teamId)
+    {
+        $countSql = "SELECT COUNT(*) FROM nathejk_member WHERE teamId = nathejk_team.id AND deletedUts = 0";
+        $activeCountSql = $countSql . " AND pausedUts = 0 AND discontinuedUts = 0";
+        $sql = "SELECT CONCAT(teamNumber, '-', ($countSql)) AS armNumber, ($activeCountSql) AS activeMemberCount FROM nathejk_team WHERE parentTeamId = :teamId";
+        //$sql = "SELECT  FROM nathejk_team WHERE parentTeamId = :teamId";
+        $stmt = $this->app['db']->executeQuery($sql, ['teamId' => $teamId]);
+        $teams = [];
+        while ($team = $stmt->fetchObject()) {
+            $teams[] = $team;
+        }
+        return $teams;
+    }
 
     public function saveScan($team, $member, $loc)
     {
         $sql = "INSERT INTO nathejk_checkIn (teamId, memberId, location, createdUts, typeName, isCaught, outUts, deletedUts, remark) VALUES (?, ?, ?, UNIX_TIMESTAMP(NOW()), 'qr', ?, 0, 0, '')";
-        foreach ($this->findSubTeams($team->id) + [$team] as $t) {
+        $teams = array_merge($this->findSubTeams($team->id), [$team]);
+        foreach ($teams as $t) {
             $this->app['db']->executeQuery($sql, [$t->id, $member->id, $loc, (int)$member->isBandit]);
         }
     }

@@ -34,7 +34,7 @@ class Controller
             return $app['twig']->render('error.twig', $this->context);
         }
         if ($team->parentTeamId) {
-            $team = $app['twig']->findTeam($team->parentTeamId);
+            $team = $app['repo']->findTeam($team->parentTeamId);
         }
 
         $this->context += ['team' => $team];
