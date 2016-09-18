@@ -103,6 +103,14 @@ class Repository
             $this->app['db']->executeQuery($sql, [$t->id, $member->id, $loc, (int)$member->isBandit]);
         }
     }
+    public function finish($team)
+    {
+        $sql = "UPDATE nathejk_team SET finishUts=:uts WHERE id=:teamId AND finishUts=0";
+        $teams = array_merge($this->findSubTeams($team->id), [$team]);
+        foreach ($teams as $t) {
+            $this->app['db']->executeQuery($sql, ['uts' => time(), 'teamId' => $t->id]);
+        }
+    }
 
     public function getNoticeText()
     {

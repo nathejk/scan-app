@@ -46,6 +46,9 @@ class Controller
         else if (empty($loc)) {
             return $app['twig']->render('coordinates.twig', $this->context);
         } else {
+            if ($user->team->typeName == 'slut') {
+                $app['repo']->finish($team);
+            }
             $app['repo']->saveScan($team, $user, $loc);
             $this->scan($team, $user, $loc);
             // reload team to reflec scanning
