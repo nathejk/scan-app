@@ -1,35 +1,46 @@
-FROM ubuntu:16.04
+FROM alpine:3.5
+
+RUN apk upgrade -U && \
+    apk add --update --no-cache \
+        bash \
+        curl \
+        make \
+        nginx \
+    # web server
+        php7-fpm \
+        php7-opcache \
+    # composer
+        php7-json \
+        php7-mbstring \
+        php7-phar \
+        php7-openssl \
+    # hirak/prestissimo
+        php7-curl \
+    # database
+        php7-pdo_mysql \
+    # Twig
+        php7-ctype
+
+# Add S6-overlay to use S6 process manager
+# https://github.com/just-containers/s6-overlay/#the-docker-way
+ARG S6_VERSION=v1.19.1.1
+ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
+RUN curl -sSL https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64.tar.gz | tar zxf -
+
+RUN ln -s /usr/bin/php7 /usr/bin/php
 
 WORKDIR /var/www
-
-RUN apt-get update && \
-
-    # Hiawatha
-    echo "deb http://ppa.launchpad.net/octavhendra/hiawatha/ubuntu xenial main" > /etc/apt/sources.list.d/hiawatha.list && \
-    apt install -y add-apt-key && \
-    add-apt-key --keyserver keyserver.ubuntu.com 0x7813b17e4f41a0a569f421e04dab5457dac7eb24 && \
-
-    apt update && \
-    apt install -y -q --no-install-recommends composer hiawatha php-bcmath php-cli php-curl php-fpm php-mysql php-xml php-zip supervisor && \
-    apt clean && \
-    rm -rf /var/lib/apt/lists/*
-
-COPY etc/hiawatha.conf /etc/hiawatha/hiawatha.conf
-
-RUN echo "variables_order = EGPCS" > /etc/php/7.0/fpm/conf.d/99-env.ini
-RUN echo "variables_order = EGPCS" > /etc/php/7.0/cli/conf.d/99-env.ini
+ENV PATH $PATH:/var/www
 
 # Install app dependencies
 COPY composer.* ./
-RUN composer install --prefer-dist && \
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+    composer global require "hirak/prestissimo:^0.3" && \
+    composer install --prefer-dist --optimize-autoloader --no-dev && \
     composer clearcache
 
-ENV PATH $PATH:/var/www:/var/www/vendor/bin
-
+COPY /rootfs /
 COPY . .
 
-# Test image
-#RUN ./vendor/bin/phpunit src
-
 EXPOSE 80
-CMD supervisord -c etc/supervisord.conf
+ENTRYPOINT ["/init"]
