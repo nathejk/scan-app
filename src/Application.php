@@ -31,6 +31,13 @@ class Application extends \Silex\Application
                     // Do not silently truncate strings/numbers that are too big.
                     'driverOptions' => [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode = "STRICT_ALL_TABLES"'],
                 ],
+                'monolith' => [
+                    'url' => $this['config']['MONOLITH_DB_DSN'] ?? null,
+                    'charset' => 'utf8',
+
+                    // Do not silently truncate strings/numbers that are too big.
+                    'driverOptions' => [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode = "STRICT_ALL_TABLES"'],
+                ],
             ]]
         );
         $this['repo'] = $this->share(function ($app) { return new Repository($app); });

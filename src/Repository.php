@@ -15,7 +15,7 @@ class Repository
         $countSql = "SELECT COUNT(*) FROM nathejk_member WHERE teamId = team.id AND deletedUts = 0";
         $activeCountSql = $countSql . " AND pausedUts = 0 AND discontinuedUts = 0";
         $sql = "SELECT *, CONCAT(teamNumber, '-', ($countSql)) AS armNumber, ($countSql) AS startCount, ($activeCountSql) AS activeMemberCount FROM nathejk_team team WHERE team.id = :id AND team.deletedUts = 0";
-        $row = $this->app['db']->executeQuery($sql, ['id' => $teamId])->fetchObject();
+        $row = $this->app['dbs']['monolith']->executeQuery($sql, ['id' => $teamId])->fetchObject();
         if (!$row) return null;
         $row->parentTeam = intval($row->parentTeamId) ? $this->findTeam($row->parentTeamId) : null;
         $row->catchCount = $this->findContactCount($teamId, true);
@@ -41,7 +41,7 @@ class Repository
     public function findMember($memberId)
     {
         $sql = "SELECT * FROM nathejk_member WHERE id = :id AND deletedUts = 0";
-        $row = $this->app['db']->executeQuery($sql, ['id' => $memberId])->fetchObject();
+        $row = $this->app['dbs']['monolith']->executeQuery($sql, ['id' => $memberId])->fetchObject();
         if (!$row) return null;
         $row->team = $this->findTeam($row->teamId);
         $row->isBandit = in_array($row->team->typeName, ['klan', 'lok']); 
@@ -51,7 +51,7 @@ class Repository
     public function findMembersByPhone($phone)
     {
         $sql = "SELECT * FROM nathejk_member WHERE phone = :phone AND deletedUts = 0";
-        $stmt = $this->app['db']->executeQuery($sql, ['phone' => $phone]);
+        $stmt = $this->app['dbs']['monolith']->executeQuery($sql, ['phone' => $phone]);
         $members = [];
         while ($member = $stmt->fetchObject()) {
             $member->team = $this->findTeam($member->teamId);
@@ -67,14 +67,14 @@ class Repository
         if ($onlyBandit) {
             $sql .= " AND isCaught = 1";
         }
-        $row = $this->app['db']->executeQuery($sql, ['teamId' => $teamId])->fetchObject();
+        $row = $this->app['dbs']['monolith']->executeQuery($sql, ['teamId' => $teamId])->fetchObject();
         return $row ? $row->contactCount : 0;
     }
 
     public function findSubTeams($teamId)
     {
         $sql = "SELECT id FROM nathejk_team WHERE parentTeamId = :teamId";
-        $stmt = $this->app['db']->executeQuery($sql, ['teamId' => $teamId]);
+        $stmt = $this->app['dbs']['monolith']->executeQuery($sql, ['teamId' => $teamId]);
         $teams = [];
         while ($team = $stmt->fetchObject()) {
             $teams[] = $this->findTeam($team->id);
@@ -87,7 +87,7 @@ class Repository
         $activeCountSql = $countSql . " AND pausedUts = 0 AND discontinuedUts = 0";
         $sql = "SELECT CONCAT(teamNumber, '-', ($countSql)) AS armNumber, ($activeCountSql) AS activeMemberCount FROM nathejk_team WHERE parentTeamId = :teamId";
         //$sql = "SELECT  FROM nathejk_team WHERE parentTeamId = :teamId";
-        $stmt = $this->app['db']->executeQuery($sql, ['teamId' => $teamId]);
+        $stmt = $this->app['dbs']['monolith']->executeQuery($sql, ['teamId' => $teamId]);
         $teams = [];
         while ($team = $stmt->fetchObject()) {
             $teams[] = $team;
@@ -100,7 +100,7 @@ class Repository
         $sql = "INSERT INTO nathejk_checkIn (teamId, memberId, location, createdUts, typeName, isCaught, outUts, deletedUts, remark) VALUES (?, ?, ?, UNIX_TIMESTAMP(NOW()), 'qr', ?, 0, 0, '')";
         $teams = array_merge($this->findSubTeams($team->id), [$team]);
         foreach ($teams as $t) {
-            $this->app['db']->executeQuery($sql, [$t->id, $member->id, $loc, (int)$member->isBandit]);
+            $this->app['dbs']['monolith']->executeQuery($sql, [$t->id, $member->id, $loc, (int)$member->isBandit]);
         }
     }
     public function finish($team)
@@ -108,7 +108,7 @@ class Repository
         $sql = "UPDATE nathejk_team SET finishUts=:uts WHERE id=:teamId AND finishUts=0";
         $teams = array_merge($this->findSubTeams($team->id), [$team]);
         foreach ($teams as $t) {
-            $this->app['db']->executeQuery($sql, ['uts' => time(), 'teamId' => $t->id]);
+            $this->app['dbs']['monolith']->executeQuery($sql, ['uts' => time(), 'teamId' => $t->id]);
         }
     }
 
