@@ -40,6 +40,6 @@ class Application extends \Silex\Application
                 ],
             ]]
         );
-        $this['repo'] = $this->share(function ($app) { return new Repository($app); });
+        $this['repo'] = function ($app) { return new Repository($app); };
     }
 }

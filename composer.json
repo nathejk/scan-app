@@ -5,9 +5,12 @@
         }
     },
     "require": {
-        "silex/silex": "~1.3",
-        "doctrine/dbal": "~2.5",                                                                                      
+        "silex/silex": "~2.0",
         "twig/twig": "~1.24",
+        
+        "doctrine/migrations": "^1.5.0",
+        "dflydev/doctrine-orm-service-provider": "~2.0",
+        
         "repejota/nats": "~0.8",
 
         "michelf/php-markdown": "~1.5"

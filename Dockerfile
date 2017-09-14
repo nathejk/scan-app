@@ -19,7 +19,9 @@ RUN apk upgrade -U && \
     # database
         php7-pdo_mysql \
     # Twig
-        php7-ctype
+        php7-ctype \
+    # phpunit
+        php7-dom
 
 # Add S6-overlay to use S6 process manager
 # https://github.com/just-containers/s6-overlay/#the-docker-way
