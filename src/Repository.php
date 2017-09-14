@@ -10,6 +10,14 @@ class Repository
         $this->app = $app;
     }
 
+    public function findTeamIdByNumber($number)
+    {
+        $sql = "SELECT id FROM nathejk_team WHERE teamNumber = :number";
+        $row = $this->app['dbs']['monolith']->executeQuery($sql, ['number' => $number])->fetchObject();
+
+        return $row ? $row->id : null;
+    }
+
     public function findTeam($teamId)
     {
         $countSql = "SELECT COUNT(*) FROM nathejk_member WHERE teamId = team.id AND deletedUts = 0";

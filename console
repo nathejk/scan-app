@@ -1,0 +1,34 @@
+#!/usr/bin/env php
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+umask(0000);
+
+$app = new \Nathejk\Scan\Application(['debug' => true, 'config' => $_ENV]);
+$app->boot();
+
+$app['console.input'] = new \Symfony\Component\Console\Input\ArgvInput();
+$app['console.output'] = new \Symfony\Component\Console\Output\ConsoleOutput();
+
+
+$config = new \Doctrine\DBAL\Migrations\Configuration\Configuration($app['db']);
+$config->setMigrationsDirectory(__DIR__ . '/migrations');
+$config->setMigrationsNamespace('Nathejk\Migration');
+
+$helperSet = new \Symfony\Component\Console\Helper\HelperSet(array(
+    'db' => new \Doctrine\DBAL\Tools\Console\Helper\ConnectionHelper($app['db']),
+    'em' => new \Doctrine\ORM\Tools\Console\Helper\EntityManagerHelper($app['orm.em']),
+    'question' => new \Symfony\Component\Console\Helper\QuestionHelper(),
+    'configuration' => new \Doctrine\DBAL\Migrations\Tools\Console\Helper\ConfigurationHelper($app['db'], $config),
+));
+
+$console = new \Symfony\Component\Console\Application('Nathejk', '0.1');
+$console->setDispatcher($app['dispatcher']);
+$console->setHelperSet($helperSet);
+
+$console->addCommands([
+]);
+
+Doctrine\ORM\Tools\Console\ConsoleRunner::addCommands($console);
+Doctrine\DBAL\Migrations\Tools\Console\ConsoleRunner::addCommands($console);
+
+$console->run($app['console.input'], $app['console.output']);

@@ -15,7 +15,8 @@ class Application extends \Silex\Application
     protected function registerRoutes()
     {
         $this->match('/', Controller::class . '::loginAction');
-        $this->match('/scan/{teamId}/{checksum}', Controller::class . '::scanAction');
+        $this->get('/list', Controller::class . '::listAction');
+        $this->match('/{qrId}/{secret}', Controller::class . '::scanAction');
     }
 
     protected function registerServices()
@@ -40,6 +41,19 @@ class Application extends \Silex\Application
                 ],
             ]]
         );
+        $this->register(new \Dflydev\Provider\DoctrineOrm\DoctrineOrmServiceProvider(), [
+            'orm.proxies_dir' => __DIR__ . '/../build/doctrine/proxies',
+            'orm.em.options' => [
+                'mappings' => [
+                    [
+                        'type' => 'annotation',
+                        'namespace' => 'Nathejk\Scan\Entity',
+                        'path' => __DIR__ . '/Entity',
+                    ],
+                ],
+            ],
+            //'orm.auto_generate_proxies' => !empty($this['config']['ORM_AUTO_GENERATE_PROXIES']) ? AbstractProxyFactory::AUTOGENERATE_ALWAYS : AbstractProxyFactory::AUTOGENERATE_FILE_NOT_EXISTS,
+        ]);
         $this['repo'] = function ($app) { return new Repository($app); };
     }
 }

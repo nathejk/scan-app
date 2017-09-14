@@ -2,6 +2,7 @@
 namespace Nathejk\Scan;
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class Controller
 {
@@ -13,12 +14,30 @@ class Controller
         return \Michelf\MarkdownExtra::defaultTransform($text);
     }
 
+    public function listAction(Application $app, Request $request)
+    {
+        for ($i = 0; $i <= 999; $i++) {
+            $secret = substr(md5($this->context['title'] . $i), 10, 4);
+            $qr = (new Entity\QR)
+                ->setSecret($secret);
+            $app['orm.em']->persist($qr);
+        }
+        $app['orm.em']->flush();
+
+        $txt = "number;url\n";
+        $qrs = $app['orm.em']->getRepository(Entity\QR::class)->findAll();
+        foreach ($qrs as $qr) {
+            $txt .= "{$qr->getId()};https://scan.nathejk.dk/{$qr->getId()}/{$qr->getSecret()}\n";
+        }
+        return new Response($txt, 200, ["Content-Type" => "text/plain"]);;
+    }
+
     public function loginAction(Application $app, Request $request)
     {
         return 'scan';
     }
 
-    public function scanAction(Application $app, Request $request, $teamId, $checksum)
+    public function scanAction(Application $app, Request $request, $qrId, $secret)
     {
         if (!$user = $this->getLoggedInUser($app, $request)) {
             return 'fail';
@@ -28,7 +47,29 @@ class Controller
             // $user this is not a user, but a template
             return $user;
         }
+        $qr = $app['orm.em']->getRepository(Entity\QR::class)->findOneBy(['id' => $qrId, 'secret' => $secret]);
+        if (!$qr) {
+            return $app['twig']->render('error.twig', $this->context);
+        }
+        if (!$qr->getNumber()) {
+            if ($number = $request->query->get('number')) {
+                $teamId = $app['repo']->findTeamIdByNumber($number);
+                $team = $app['repo']->findTeam($teamId);
+                return $app['twig']->render('map-qr.twig', $this->context + ["team" => $team]);
+            } elseif ($number = $request->query->get('confirmed')) {
+                $qr
+                    ->setNumber($number)
+                    ->setMapCreateTime(new \DateTime)
+                    ->setMapCreateByPhone($user->phone);
 
+                $app['orm.em']->persist($qr);
+                $app['orm.em']->flush();
+            } else {
+                return $app['twig']->render('map-qr.twig', $this->context);
+            }
+        }
+
+        $teamId = $app['repo']->findTeamIdByNumber($qr->getNumber());
         $team = $app['repo']->findTeam($teamId);
         if (!$team) {
             return $app['twig']->render('error.twig', $this->context);

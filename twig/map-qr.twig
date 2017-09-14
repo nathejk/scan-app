@@ -1,0 +1,20 @@
+{% extends "page.twig" %}
+{% block container %}
+    <div class="starter-template">
+        <h1>Tilknyt patrulje</h1>
+        {% if team is defined and team %}
+        <p class="lead">Du er ved at tilknytte denne QR-kode til <strong>{{ team.title }}</strong></p>
+        <img src="http://tilmelding.nathejk.dk/photo.image.php?id={{ team.photoId }}" alt="Billede af patruljen" class="img-rounded">
+        <form action="" method="get">
+            <button type="submit" class="btn btn-primary" name="confirmed" value="{{ team.teamNumber }}">Bekræft</button>
+        </form>
+
+        {% else %}
+        <p class="lead">Denne QR-kode har ikke været scannet før, indtast patruljenummer på den patrulje der skal tilknyttes denne QR-kode:</p>
+        <form action="" method="get">
+            <input type="number" class="form-control" name="number" placeholder="Patruljenummer">
+            <button type="submit" class="btn btn-primary">Videre &raquo;</button>
+        </form>
+        {% endif %}
+    </div>
+{% endblock %}
