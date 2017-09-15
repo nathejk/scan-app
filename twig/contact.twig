@@ -12,6 +12,10 @@
 {% endif %}
 
         <h1>{{ team.armNumber }}. {{ team.title }}</h1>
+        <div class="row">
+            <div class="col-md-3"></div>
+            <img src="http://tilmelding.nathejk.dk/photo.image.php?id={{ team.photoId }}" alt="Billede af patruljen" class="img-rounded col-md-6">
+        </div>
         {% if member.isBandit %}
             {% if team.catchCount == 1 %}
                 <p class="lead">BINGO, det er først gang at denne patrulje bliver fanget</p>
