@@ -100,6 +100,7 @@ class Controller
 
     public function scan($team, $member, $loc)
     {
+        return;
         if (!strpos($loc, ':')) return;
 
         $now = new \DateTime('NOW');
