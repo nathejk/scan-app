@@ -21,7 +21,7 @@ class Repository
     public function findTeam($teamId)
     {
         $countSql = "SELECT COUNT(*) FROM nathejk_member WHERE teamId = team.id AND deletedUts = 0";
-        $activeCountSql = $countSql . " AND pausedUts = 0 AND discontinuedUts = 0";
+        $activeCountSql = $countSql . " AND pausedUts = 0 AND inhqUts = 0 AND discontinuedUts = 0";
         $sql = "SELECT *, CONCAT(teamNumber, '-', ($countSql)) AS armNumber, ($countSql) AS startCount, ($activeCountSql) AS activeMemberCount FROM nathejk_team team WHERE team.id = :id AND team.deletedUts = 0";
         $row = $this->app['dbs']['monolith']->executeQuery($sql, ['id' => $teamId])->fetchObject();
         if (!$row) return null;
