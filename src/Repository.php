@@ -1,12 +1,12 @@
 <?php
-namespace Nathejk\Scan;
+namespace Nathejk;
 
 class Repository
 {
     protected $app;
 
     public function __construct(Application $app)
-    {   
+    {
         $this->app = $app;
     }
 

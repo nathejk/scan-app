@@ -1,11 +1,11 @@
 <?php
-namespace Nathejk\Scan\Entity;
+namespace Nathejk\Entity;
 
 /**
  * @Entity
  * @Table(name="qr")
  */
-class QR extends \Nathejk\Scan\Entity
+class QR extends \Nathejk\Entity
 {
     /**
      * @Id @GeneratedValue @Column(type="integer", options={"unsigned":true})

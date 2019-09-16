@@ -3,7 +3,7 @@
 require_once __DIR__ . '/vendor/autoload.php';
 umask(0000);
 
-$app = new \Nathejk\Scan\Application(['debug' => true, 'config' => $_ENV]);
+$app = new \Nathejk\Application(['debug' => true, 'config' => $_ENV]);
 $app->boot();
 
 $app['console.input'] = new \Symfony\Component\Console\Input\ArgvInput();

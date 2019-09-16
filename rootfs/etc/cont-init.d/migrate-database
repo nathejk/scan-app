@@ -1,0 +1,3 @@
+#!/usr/bin/with-contenv bash
+
+/var/www/console --no-interaction migrations:migrate

@@ -1,12 +1,12 @@
 <?php
-namespace Nathejk\Scan;
+namespace Nathejk;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class Controller
 {
-    protected $context = ['title' => 'Nathejk 2017'];
+    protected $context = ['title' => 'Nathejk 2019'];
 
     public function indexAction(Application $app, Request $request)
     {
@@ -91,20 +91,43 @@ class Controller
                 $app['repo']->finish($team);
             }
             $app['repo']->saveScan($team, $user, $loc);
-            $this->scan($team, $user, $loc);
+            $this->scan($app, $request, $qrId, $team, $user, $loc);
             // reload team to reflec scanning
             $this->context['team'] = $app['repo']->findTeam($team->id);
             return $app['twig']->render('contact.twig', $this->context);
         }
     }
 
-    public function scan($team, $member, $loc)
+    public function scan($app, $request, $qrId, $team, $member, $loc)
     {
+        $body = (object)[
+            'qrId' => $qrId,
+            'teamId' => $team->id,
+            'teamNumber' => $team->armNumber,
+            'scannerId' => $member->id,
+            'scannerPhone' => $member->phone,
+        ];
+        $meta = (object)[
+            'httpheaders' => array_diff_key($request->server->getHeaders(), array_flip(['COOKIE', 'X_API_KEY'])),
+            'producer' => 'scan-app',
+        ];
+        if (strstr($loc, ":") !== false) {
+            list($lat, $lon) = explode(':', "$loc:");
+            $body->location = ['lat' => $lat, 'lon' => $lon];
+        } else {
+            $body->position = $loc;
+        }
+        $message = (new Stan\Message)->setType('qr.scanned')->setBody($body)->setMeta($meta);
+
+        $app['stan']->publish('nathejk', $message);
+/*
+        $this->_stan->publish($channel, [
+        ]);
+        $this->_id = Uuid::uuid4()->toString();
         return;
         if (!strpos($loc, ':')) return;
 
         $now = new \DateTime('NOW');
-        list($lat, $lon) = explode(':', $loc);
         $connectionOptions = new \Nats\ConnectionOptions();
         $connectionOptions
             ->setHost('nats')
@@ -113,14 +136,12 @@ class Controller
         $c->connect();
         $c->publish("geoEvents", json_encode([
             'type' => "caught",
-            'location' => ['lat' => $lat, 'lon' => $lon],
-            'patrol' => $team->armNumber,
-            'bandit' => $member->number,
             'charter' => $member->team->title,
             'gang' => $member->team->title,
             'timestamp' => $now->format(\DateTime::ISO8601),
         ]));
         $c->close();
+ */
     }
 
     public function getLoggedInUser($app, $request)

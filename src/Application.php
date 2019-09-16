@@ -1,5 +1,5 @@
 <?php
-namespace Nathejk\Scan;
+namespace Nathejk;
 
 class Application extends \Silex\Application
 {
@@ -21,6 +21,11 @@ class Application extends \Silex\Application
 
     protected function registerServices()
     {
+        $this->register(new Stan\ServiceProvider, [
+            'stan.options' => [
+                'dsn' => $this['config']['STAN_DSN'] ?? '',
+            ]
+        ]);
         $this->register(new \Silex\Provider\TwigServiceProvider(), ['twig.path' => __DIR__ . '/../twig']);
         $this->register(
             new \Silex\Provider\DoctrineServiceProvider(),
@@ -47,7 +52,7 @@ class Application extends \Silex\Application
                 'mappings' => [
                     [
                         'type' => 'annotation',
-                        'namespace' => 'Nathejk\Scan\Entity',
+                        'namespace' => 'Nathejk\Entity',
                         'path' => __DIR__ . '/Entity',
                     ],
                 ],

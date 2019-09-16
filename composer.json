@@ -1,17 +1,17 @@
 {
     "autoload" : {
         "psr-4" : {
-            "Nathejk\\Scan\\" : "src"
+            "Nathejk\\" : "src"
         }
     },
     "require": {
         "silex/silex": "~2.0",
         "twig/twig": "~1.24",
-        
+
         "doctrine/migrations": "^1.5.0",
         "dflydev/doctrine-orm-service-provider": "~2.0",
-        
-        "repejota/nats": "~0.8",
+        "ramsey/uuid": "^3.8",
+        "byrnedo/php-nats-streaming": "^0.2",
 
         "michelf/php-markdown": "~1.5"
     },

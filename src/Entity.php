@@ -1,5 +1,5 @@
 <?php
-namespace Nathejk\Scan;
+namespace Nathejk;
 
 abstract class Entity
 {

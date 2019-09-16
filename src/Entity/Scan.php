@@ -1,11 +1,11 @@
 <?php
-namespace Nathejk\Scan\Entity;
+namespace Nathejk\Entity;
 
 /**
  * @Entity
  * @Table(name="scan")
  */
-class Scan extends \Nathejk\Scan\Entity
+class Scan extends \Nathejk\Entity
 {
     public function __construct()
     {
