@@ -6,7 +6,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Controller
 {
-    protected $context = ['title' => 'Nathejk 2019'];
+    protected $context = ['title' => 'Nathejk 2021'];
 
     public function indexAction(Application $app, Request $request)
     {
