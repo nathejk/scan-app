@@ -14,6 +14,7 @@ RUN apk upgrade -U && \
         php7-mbstring \
         php7-phar \
         php7-openssl \
+        php7-zlib \
     # hirak/prestissimo
         php7-curl \
     # database
@@ -37,7 +38,6 @@ ENV PATH $PATH:/var/www
 # Install app dependencies
 COPY composer.* ./
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
-    composer global require "hirak/prestissimo:^0.3" && \
     composer install --prefer-dist --optimize-autoloader --no-dev && \
     composer clearcache
 
