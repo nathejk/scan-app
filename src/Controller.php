@@ -52,6 +52,11 @@ class Controller
             return $app['twig']->render('error.twig', $this->context);
         }
         if (!$qr->getNumber()) {
+
+            $meta = (object)[
+                'httpheaders' => array_diff_key($request->server->getHeaders(), array_flip(['COOKIE', 'X_API_KEY'])),
+                'producer' => 'scan-app',
+            ];
             if ($number = $request->query->get('number')) {
                 $teamId = $app['repo']->findTeamIdByNumber($number);
                 $team = $app['repo']->findTeam($teamId);
@@ -62,9 +67,25 @@ class Controller
                     ->setMapCreateTime(new \DateTime)
                     ->setMapCreateByPhone($user->phone);
 
+                $body = (object)[
+                    'qrId' => $qrId,
+                    'teamId' => $app['repo']->findTeamIdByNumber($number),
+                    'teamNumber' => $number,
+                    'scannerId' => $user->id,
+                    'scannerPhone' => $user->phone,
+                ];
+                $app['stan']->publish('nathejk', (new Stan\Message)->setType('qr.registered')->setBody($body)->setMeta($meta));
+                
                 $app['orm.em']->persist($qr);
                 $app['orm.em']->flush();
             } else {
+                $body = (object)[
+                    'qrId' => $qrId,
+                    'scannerId' => $user->id,
+                    'scannerPhone' => $user->phone,
+                ];
+                $app['stan']->publish('nathejk', (new Stan\Message)->setType('qr.found')->setBody($body)->setMeta($meta));
+
                 return $app['twig']->render('map-qr.twig', $this->context);
             }
         }
