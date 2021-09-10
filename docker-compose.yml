@@ -18,9 +18,9 @@ services:
         volumes:
         - ".:/var/www"
         environment:
-            STAN_DSN: stan://nats-streaming-server/test-cluster
+            STAN_DSN: stan://dev.nathejk.dk:4222/nathejk
             DB_DSN: mysql://nathejk:kodeord@mysql/scan
-            MONOLITH_DB_DSN: mysql://nathejk:kodeord@local.pnorental.com:13306/nathejk2018
+            MONOLITH_DB_DSN: mysql://nathejk:kodeord@dev.nathejk.dk:13306/nathejk2018
 
     mysql:
         image: mariadb:10.0
@@ -31,17 +31,4 @@ services:
             MYSQL_PASSWORD: kodeord
             MYSQL_ROOT_PASSWORD: ib
             TZ: Europe/Copenhagen
-
-    nats-streaming-server:
-        image: nats-streaming:0.16.0
-        restart: always
-
-    nats-streaming-console:
-        image: jrgensen/nats-streaming-console
-        restart: always
-        environment:
-            STAN_URL: nats://nats-streaming-server:4222
-            STAN_MONITOR_URL: http://nats-streaming-server:8222
-            STAN_CLUSTER: test-cluster
-
 
