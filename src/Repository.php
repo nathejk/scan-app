@@ -18,6 +18,9 @@ class Repository
         return $row ? $row->id : null;
     }
 
+    /**
+     * @return {id, armNumber, parentTeamId, catchCount, contactCount, photoId, noticeText, title, teamNumber}
+     */
     public function findTeam($teamId)
     {
         $countSql = "SELECT COUNT(*) FROM nathejk_member WHERE teamId = team.id AND deletedUts = 0";
@@ -46,6 +49,9 @@ class Repository
         return $row;
     }
 
+    /**
+     * @return {id, phone, isBandit, team.typeName, team.title}
+     */
     public function findMember($memberId)
     {
         $sql = "SELECT * FROM nathejk_member WHERE id = :id AND deletedUts = 0";
@@ -69,7 +75,7 @@ class Repository
         return $members;
     }
 
-    public function findContactCount($teamId, $onlyBandit = false)
+    private function findContactCount($teamId, $onlyBandit = false)
     {
         $sql = "SELECT COUNT(*) AS contactCount FROM nathejk_checkIn WHERE teamId = :teamId AND typeName != 'qr-fail'";
         if ($onlyBandit) {
@@ -79,7 +85,7 @@ class Repository
         return $row ? $row->contactCount : 0;
     }
 
-    public function findSubTeams($teamId)
+    private function findSubTeams($teamId)
     {
         $sql = "SELECT id FROM nathejk_team WHERE parentTeamId = :teamId";
         $stmt = $this->app['dbs']['monolith']->executeQuery($sql, ['teamId' => $teamId]);
@@ -89,7 +95,11 @@ class Repository
         }
         return $teams;
     }
-    public function findSubTeamsStat($teamId)
+
+    /**
+     * @return {activeMemberCount, armNumber}
+     */
+    private function findSubTeamsStat($teamId)
     {
         $countSql = "SELECT COUNT(*) FROM nathejk_member WHERE teamId = nathejk_team.id AND deletedUts = 0";
         $activeCountSql = $countSql . " AND pausedUts = 0 AND discontinuedUts = 0";
@@ -119,7 +129,7 @@ class Repository
             $this->app['dbs']['monolith']->executeQuery($sql, ['uts' => time(), 'teamId' => $t->id]);
         }
     }
-
+/*
     public function getNoticeText()
     {
         if ($this->teams) {
@@ -135,7 +145,6 @@ class Repository
         }
         return '';
     }
-
     public function getArmNumber()
     {
         if (intval($this->teamNumber) > 0) {
@@ -143,4 +152,5 @@ class Repository
         }
         return '';
     }
+*/
 }

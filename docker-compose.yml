@@ -3,7 +3,6 @@ version: '2'
 services:
     gw:
         image: jrgensen/gateway
-        restart: always
         environment:
             PROXY_MAPPINGS: >
                 nats:nats-streaming-console:8282
@@ -14,7 +13,7 @@ services:
 
     scan-app:
         image: nathejk/scan-app
-        build: ../scan-app
+        build: .
         volumes:
         - ".:/var/www"
         environment:
@@ -24,7 +23,6 @@ services:
 
     mysql:
         image: mariadb:10.0
-        restart: always
         environment:
             MYSQL_DATABASE: scan
             MYSQL_USER: nathejk
