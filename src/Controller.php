@@ -31,6 +31,12 @@ class Controller
         }
         return new Response($txt, 200, ["Content-Type" => "text/plain"]);;
     }
+    public function listMembers(Application $app, Request $request, $phone)
+    {
+        $members =  $app['repo']->findMembersByPhone($phone);
+        
+        return new Response(count($members) ? json_encode($members) : $phone, 200, ["Content-Type" => "application/json"]);
+    }
 
     public function loginAction(Application $app, Request $request)
     {
@@ -108,7 +114,7 @@ class Controller
         else if (empty($loc)) {
             return $app['twig']->render('coordinates.twig', $this->context);
         } else {
-            if ($user->team->typeName == 'slut') {
+            if ($user->team->typeName??'' == 'slut') {
                 $app['repo']->finish($team);
             }
             $app['repo']->saveScan($team, $user, $loc);
@@ -163,6 +169,13 @@ class Controller
         ]));
         $c->close();
  */
+    }
+
+    public function logoutAction(Application $app, Request $request)
+    {
+        setcookie('nh');
+        //dd, $member->id . ':' . md5('kaal' . $member->id), time() + $duration, '/');
+        return 'ok';
     }
 
     public function getLoggedInUser($app, $request)

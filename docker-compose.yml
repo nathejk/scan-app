@@ -1,32 +1,61 @@
-version: '2'
+version: '3.4'
+
+volumes:
+  go:
 
 services:
-    gw:
-        image: jrgensen/gateway
-        environment:
-            PROXY_MAPPINGS: >
-                nats:nats-streaming-console:8282
-                nats-monitor:nats-streaming-server:8222
-                redis:redis-commander:8081
-        ports:
-        - 80
+  gw:
+    image: jrgensen/gateway
+    environment:
+      PROXY_MAPPINGS: >
+        sql:phpmyadmin
+    ports:
+    - 80
 
-    scan-app:
-        image: nathejk/scan-app
-        build: .
-        volumes:
-        - ".:/var/www"
-        environment:
-            STAN_DSN: stan://dev.nathejk.dk:4222/nathejk
-            DB_DSN: mysql://nathejk:kodeord@mysql/scan
-            MONOLITH_DB_DSN: mysql://nathejk:kodeord@dev.nathejk.dk:13306/nathejk2018
+  scan-app:
+    image: nathejk/scan-app
+    build: .
+    volumes:
+    - ".:/var/www"
+    environment:
+      STAN_DSN: stan://dev.nathejk.dk:4222/nathejk
+      DB_DSN: mysql://nathejk:kodeord@mysql/scan
+      MONOLITH_DB_DSN: mysql://nathejk:kodeord@dev.nathejk.dk:3306/nathejk2018
+    depends_on:
+    - gw
+    - mysql
 
-    mysql:
-        image: mariadb:10.0
-        environment:
-            MYSQL_DATABASE: scan
-            MYSQL_USER: nathejk
-            MYSQL_PASSWORD: kodeord
-            MYSQL_ROOT_PASSWORD: ib
-            TZ: Europe/Copenhagen
+  dims:
+    build:
+      context: .
+      target: dev
+      dockerfile: docker/dims.Dockerfile
+    volumes:
+    - .:/app
+    - go:/go
+    environment:
+      #GO_BUILD_FLAGS: -race
+      STAN_DSN: stan://dev.nathejk.dk:4222/nathejk
+      #DB_DSN: mysql://nathejk:kodeord@mysql/scan
+      DB_DSN: nathejk:kodeord@tcp(mysql:3306)/scan?parseTime=true
+    depends_on:
+    - mysql
 
+  mysql:
+    image: mariadb:10.0
+    environment:
+      MYSQL_DATABASE: scan
+      MYSQL_USER: nathejk
+      MYSQL_PASSWORD: kodeord
+      MYSQL_ROOT_PASSWORD: ib
+      TZ: Europe/Copenhagen
+
+  phpmyadmin:
+    image: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: ib
+      PMA_USER: nathejk
+      PMA_PASSWORD: kodeord
+    depends_on:
+    - gw

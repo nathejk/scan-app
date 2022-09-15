@@ -56,10 +56,21 @@ class Repository
     {
         $sql = "SELECT * FROM nathejk_member WHERE id = :id AND deletedUts = 0";
         $row = $this->app['dbs']['monolith']->executeQuery($sql, ['id' => $memberId])->fetchObject();
+        if ($row) {
+            $row->team = $this->findTeam($row->teamId);
+            $row->isBandit = in_array($row->team->typeName, ['klan', 'lok']); 
+            return $row;
+        }
+        $sql = "SELECT * FROM personnel WHERE userId = :id";
+        $row = $this->app['db']->executeQuery($sql, ['id' => $memberId])->fetchObject();
         if (!$row) return null;
-        $row->team = $this->findTeam($row->teamId);
-        $row->isBandit = in_array($row->team->typeName, ['klan', 'lok']); 
-        return $row ? $row : null;
+        $row->id = $row->userId;
+        $row->isBandit = in_array($row->department, ['bhq', 'lok1', 'lok2', 'lok3', 'lok4', 'lok5']);
+        $row->team = [
+            'typeName' => $row->department,
+            'title' => $row->department,
+        ];
+        return $row;
     }
 
     public function findMembersByPhone($phone)
@@ -72,7 +83,23 @@ class Repository
             $member->isBandit = in_array($member->team->typeName, ['klan', 'lok']); 
             $members[$member->id] = $member;
         }
-        return $members;
+        if (count($members) > 0) {
+            return $members;
+        }
+        $sql = "SELECT * FROM personnel WHERE phone = :phone";
+        $stmt = $this->app['db']->executeQuery($sql, ['phone' => $phone]);
+        $member = $stmt->fetchObject();
+        if (!$member) {
+            return [];
+        }
+
+        $member->id = $member->userId;
+        $member->isBandit = in_array($member->department, ['bhq', 'lok1', 'lok2', 'lok3', 'lok4', 'lok5']);
+        $member->team = [
+            'typeName' => $member->department,
+            'title' => $member->department,
+        ];
+        return[$member->userId => $member];
     }
 
     private function findContactCount($teamId, $onlyBandit = false)
@@ -118,7 +145,7 @@ class Repository
         $sql = "INSERT INTO nathejk_checkIn (teamId, memberId, location, createdUts, typeName, isCaught, outUts, deletedUts, remark) VALUES (?, ?, ?, UNIX_TIMESTAMP(NOW()), 'qr', ?, 0, 0, '')";
         $teams = array_merge($this->findSubTeams($team->id), [$team]);
         foreach ($teams as $t) {
-            $this->app['dbs']['monolith']->executeQuery($sql, [$t->id, $member->id, $loc, (int)$member->isBandit]);
+            $this->app['dbs']['monolith']->executeQuery($sql, [$t->id, intval($member->id), $loc, (int)$member->isBandit]);
         }
     }
     public function finish($team)

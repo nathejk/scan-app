@@ -16,7 +16,9 @@ class Application extends \Silex\Application
     {
         $this->match('/', Controller::class . '::loginAction');
         $this->get('/list', Controller::class . '::listAction');
+        $this->get('/members/{phone}', Controller::class . '::listMembers');
         $this->match('/{qrId}/{secret}', Controller::class . '::scanAction');
+        $this->get('/logout', Controller::class . '::logoutAction');
     }
 
     protected function registerServices()
