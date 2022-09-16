@@ -85,11 +85,11 @@ RUN set -eux; \
 	rm -rf /tmp/* /var/cache/apk/*
 
 WORKDIR /app
-COPY --from=build /app/application /legacy-reader
+COPY --from=build /app/application /scan-app-dims
 #COPY --from=ui-builder /app/dist /www
 COPY docker/bin/init /init
 
 #HEALTHCHECK --interval=30s --timeout=15s --start-period=900s --retries=3 CMD test -f /tmp/healthy
 
 ENTRYPOINT ["/init"]
-CMD ["/legacy-reader"]
+CMD ["/scan-app-dims"]
